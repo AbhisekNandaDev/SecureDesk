@@ -1,0 +1,58 @@
+# Byte-compiled / optimized / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.env/
+
+# Environment variables & secrets (keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# Database / Local storage / Volume mounts
+*.db
+*.sqlite3
+postgres_data/
+
+# Logs
+*.log
+logs/
+
+# Unit test & coverage reports
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Distribution & packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Editor & IDE configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System Files (macOS, Windows)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
