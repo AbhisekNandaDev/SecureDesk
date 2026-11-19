@@ -56,3 +56,10 @@ dist/
 .Trashes
 Thumbs.db
 ehthumbs.db
+
+docs/project_overview.txt
+
+.gitignore
+
+# Local lab login credentials
+/seeded_users.csv

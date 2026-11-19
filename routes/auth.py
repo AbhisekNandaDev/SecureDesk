@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.db import get_db
+from core.permissions import require_account_admin
 from core.security import (
     create_access_token,
     get_current_user,
@@ -16,15 +17,19 @@ from schema.user import UserCreate, UserLogin, UserRead, UserResponse
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
-async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+async def register(
+    payload: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    administrator: User = Depends(require_account_admin),
+):
     """
-    Registers a new user account:
+    Administrator-only account creation:
     - Validates email uniqueness
     - Securely hashes password
     - Stores user record in PostgreSQL
-    - Returns the created user object and a JWT access token
+    - Returns the created user profile
     """
     # Check if email is already registered
     existing_user = await db.execute(select(User).where(User.email == payload.email))
@@ -43,25 +48,15 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
         user_type=payload.user_type,
         department=payload.department,
         permission_group=payload.permission_group,
+        groups=payload.groups,
+        support_departments=[department.value for department in payload.support_departments],
     )
 
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
 
-    # Generate JWT token
-    token = create_access_token(
-        data={
-            "sub": str(new_user.id),
-            "email": new_user.email,
-            "user_type": new_user.user_type,
-        }
-    )
-
-    return UserResponse(
-        user=UserRead.model_validate(new_user),
-        token=token,
-    )
+    return UserRead.model_validate(new_user)
 
 
 @router.post("/login", response_model=UserResponse)

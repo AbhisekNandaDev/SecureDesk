@@ -2,7 +2,9 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from core.permissions import Department, Role
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserBase(BaseModel):
@@ -10,14 +12,25 @@ class UserBase(BaseModel):
     name: str
     email: EmailStr
     is_active: bool = True
-    user_type: str = "engineer"
-    department: str
-    permission_group: str
+    user_type: Role = Role.EMPLOYEE
+    department: Department
+    permission_group: str = ""
+    groups: list[str] = Field(default_factory=list)
+    support_departments: list[Department] = Field(default_factory=list)
 
 
 class UserCreate(UserBase):
     """Schema for User signup/registration."""
-    password: str = Field(..., min_length=6, description="Plaintext password for registration")
+    model_config = ConfigDict(extra="forbid")
+    password: str = Field(..., min_length=12, max_length=72, description="Account password")
+
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_bytes(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Password must be at most 72 UTF-8 bytes")
+        return value
 
 
 class UserLogin(BaseModel):
